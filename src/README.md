@@ -1,0 +1,1 @@
+This directory contains only the files that would have to be added to the yast-installation repository, it does not contain the patches and means required to integrate the code with the openSUSE Leap 15.2 installation system it was developed with. For this, please see the test/ subdirectory.
