@@ -1,0 +1,56 @@
+sed -i '{
+  /[[:blank:]]*_("Import SSH keys\/settings")/a\        _("Import libvirt configuration files"),
+  /[[:blank:]]*_("Importing SSH keys\/settings")/a\        _("Importing libvirt configuration files),
+  /if Profile.current\["ssh_import"\]/,/^$/{
+    /^$/{
+      a\      Progress.NextStage\n
+    }
+  }
+}' /usr/share/YaST2/clients/inst_autosetup.rb
+
+sed -i '{
+  /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
+  /^[[:blank:]]*read_ssh_info(device, mount_point)/a\        read_libvirt_info(device, mount_point)
+  /^[[:blank:]]*def read_ssh_info/,/^$/{
+    /^$/{
+     a\    def read_libvirt_info(device, mount_point)
+     a\      log.info "Reading libvirt information from #{device}"
+     a\      ::Installation::LibvirtImporter.instance.scan_device(mount_point, device)
+     a\    end\n
+    }
+  }
+}' /usr/share/YaST2/lib/installation/clients/inst_pre_install.rb
+
+sed -i '{
+  /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
+  /^[[:blank:]]*copy_ssh_files/a\\n      copy_libvirt_files\n
+  /^[[:blank:]]*def copy_ssh_files/,/^$/{
+    /^$/{
+      a\    def copy_libvirt_files
+      a\      log.info "Copying libvirt files"
+      a\      ::Installation::LibvirtImporter.instance.write_cfgfiles(installation_destination)
+      a\    end
+    }
+  }
+}' /usr/share/YaST2/lib/installation/clients/copy_files_finish.rb
+
+in_proposal_module=0
+found_ssh_import=0
+IFS=''
+while read line ; do
+    [[ $line =~ ^[[:blank:]]*\<proposal_modules ]] && in_proposal_module=1
+    [[ $line =~ ^[[:blank:]]*\<name\>ssh_import\</name\> ]] && found_ssh_import=1
+    [[ $line =~ ^[[:blank:]]*\</proposal_modules\> ]] && {
+        if [[ "${found_ssh_import}" == "1" ]] ; then
+            echo "                <proposal_module>"
+            echo "                    <name>libvirt_import</name>"
+            echo "                    <presentation_order>97</presentation_order>"
+            echo "                </proposal_module>"
+        fi
+
+        in_proposal_module=0
+        found_ssh_import=0
+    }
+    echo "$line"
+done < /control.xml >/control.xml2
+mv /control.xml2 /control.xml

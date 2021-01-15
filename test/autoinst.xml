@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+  <general>
+    <mode>
+      <!-- Always confirm detected installation settings on svr -->
+      <confirm config:type="boolean">true</confirm>
+    </mode>
+  </general>
+
+  <!-- Locale settings -->
+  <keyboard>
+    <keymap>german</keymap>
+  </keyboard>
+  <language>
+    <language>de_DE</language>
+    <languages/>
+  </language>
+  <timezone>
+    <hwclock>UTC</hwclock>
+    <timezone>Europe/Berlin</timezone>
+  </timezone>
+
+  <!-- Partitioning and filesystems -->
+  <partitioning config:type="list">
+    <drive>
+      <device>/dev/vda</device>
+      <partitions config:type="list">
+        <partition>
+          <partition_nr config:type="integer">1</partition_nr>
+          <partition_id config:type="integer">259</partition_id>
+          <create config:type="boolean">false</create>
+          <size>500MB</size>
+          <format config:type="boolean">true</format>
+          <filesystem config:type="symbol">vfat</filesystem>
+          <mount>/boot/efi</mount>
+        </partition>
+        <partition>
+          <partition_nr config:type="integer">2</partition_nr>
+          <create config:type="boolean">false</create>
+          <size>max</size>
+          <format config:type="boolean">true</format>
+          <filesystem config:type="symbol">ext4</filesystem>
+          <label>rootfs</label>
+          <mount>/</mount>
+          <fstopt>discard</fstopt>
+        </partition>
+        <partition>
+          <partition_nr config:type="integer">3</partition_nr>
+          <create config:type="boolean">false</create>
+          <size>1GB</size>
+          <format config:type="boolean">true</format>
+          <filesystem config:type="symbol">swap</filesystem>
+          <mount>swap</mount>
+        </partition>
+      </partitions>
+      <use>free</use>
+    </drive>
+  </partitioning>
+
+  <!-- Software to install -->
+  <software>
+    <patterns config:type="list">
+      <pattern>base</pattern>
+    </patterns>
+    <install_recommended config:type="boolean">false</install_recommended>
+  </software>
+
+  <!-- Bootloader configuration -->
+  <bootloader>
+    <global>
+      <activate>true</activate>
+      <secure_boot>true</secure_boot>
+    </global>
+    <loader_type>grub2-efi</loader_type>
+  </bootloader>
+
+  <!-- Networking configuration -->
+  <networking>
+    <dns>
+      <hostname>test</hostname>
+      <domain>domain</domain>
+      <dhcp_hostname config:type="boolean">false</dhcp_hostname>
+    </dns>
+    <net-udev config:type="list">
+      <rule>
+        <name>eth0</name>
+        <rule>KERNELS</rule>
+        <value>0000:00:03.0</value>
+      </rule>
+    </net-udev>
+  </networking>
+
+  <!-- Root user configuration -->
+  <users config:type="list">
+    <user>
+      <uid>0</uid>
+      <gid>0</gid>
+      <username>root</username>
+      <fullname>root</fullname>
+      <home>/root</home>
+      <user_password>test12345</user_password>
+    </user>
+  </users>
+</profile>
