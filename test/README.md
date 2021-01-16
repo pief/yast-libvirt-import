@@ -24,11 +24,13 @@ Because we use a network install and have no network resource we could load the 
 
 ### update.pre
 
-After unpacking the DUD `update.pre` gets executed. This is a special name also described in the [Update-Media-HOWTO](https://ftp.suse.com/pub/people/hvogel/Update-Media-HOWTO/). In our case this script is the glue that patches Yast files in the installation system - in a truely ugly but working way, using a wild orgy of shell scripting and `sed` regular expressions. Because we're using an installation system loaded from the network that can change over time, I don't want to simply overwrite files. And I can't use patches because `patch` is not available in the installation system. On the positive side, the regexps used are probably more likely to apply cleanly than a patch...
+After unpacking the DUD the `update.pre` script gets executed. This is a special name also described in the [Update-Media-HOWTO](https://ftp.suse.com/pub/people/hvogel/Update-Media-HOWTO/). In our case this script is the glue that patches Yast files in the installation system - in a truely ugly but working way, using a wild orgy of shell scripting and `sed` regular expressions. Because we're using an installation system loaded from the network that can change over time, I don't want to simply overwrite files. And I can't use patches because `patch` is not available in the installation system. On the positive side, the regexps used are probably more likely to apply cleanly than a patch...
 
 The files that get patched are:
 
-- `/control.xml`
-- `clients/instsetup.rb`
-- `lib/installation/clients/inst_pre_install.rb`
-- `/usr/share/YaST2/lib/installation/clients/copy_files_finish.rb`
+- `/control.xml`: this is the [product control file](https://github.com/yast/yast-installation/blob/master/doc/control-file.md) that configures the installation workflow and can be found on every installation medium. It may remind of an Autoyast control file, especially since it can also be used to configure things such as the installation language, but it's more intended to customize the installation than to automate it. Product control files also define proposal screens which call out to proposal modules. This is one of the places where we call the `LibvirtImportProposalClient`.
+- `lib/installation/clients/inst_pre_install.rb`: this is where Yast examines hard disks for existing Linux installations and tries to save data from it (existing users, SSH keys and configuration). Behind the existing call to `read_ssh_info` we hook a call to a `read_libvirt_info` function which calls our `LibvirtImporter`'s `scan_device` function.
+- `lib/installation/clients/copy_files_finish.rb`: this is where Yast copies files into the installed system. Behind the existing call to `copy_ssh_files` we hook a call to a `copy_libvirt_files` function which calls our `LibvirtImporter`'s `write_cfgfiles` function.
+
+In theory we would also patch `clients/inst_autosetup.rb`: when using an automated installation its `InstAutosetupClient` runs at the beginning. It implements its own screen "Preparing System for Automated Installation" where it replaces the otherwise manually made decisions with the choices made in the Autoyast control file. To fully support Autoyast, we would need to implement our own module here as well which we currently don't have. Meaning if you perform an automatic installation *without* confirmation, <tt>libvirt_import</tt> will always import *all* configuration files it finds.
+
