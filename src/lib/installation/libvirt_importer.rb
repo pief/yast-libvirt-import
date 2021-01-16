@@ -17,7 +17,16 @@ module Installation
     def scan_device(mount_point, device)
       log.info "Scanning #{device} for libvirt config files"
 
-      os_name = Hash[*File.read(File.join(mount_point, "etc", "os-release")).split(/[=\n]+/)]["PRETTY_NAME"].delete!('"')
+      # No system partition?
+      os_release = File.join(mount_point, "etc", "os-release")
+      return unless File.file?(os_release)
+
+      begin
+        os_name = Hash[*File.read(os_release).split(/[=\n]+/)]["PRETTY_NAME"].delete!('"')
+      rescue IOError, SystemCallError, RuntimeError => error
+        log.error("Reading /etc/os-release on #{device} failed with exception: #{error.inspect}")
+        os_name = "Linux"
+      end
 
       libvirt_dir = File.join(mount_point, "etc", "libvirt")
       [
