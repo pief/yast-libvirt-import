@@ -1,14 +1,4 @@
 sed -i '{
-  /[[:blank:]]*_("Import SSH keys\/settings")/a\        _("Import libvirt configuration files"),
-  /[[:blank:]]*_("Importing SSH keys\/settings")/a\        _("Importing libvirt configuration files),
-  /if Profile.current\["ssh_import"\]/,/^$/{
-    /^$/{
-      a\      Progress.NextStage\n
-    }
-  }
-}' /usr/share/YaST2/clients/inst_autosetup.rb
-
-sed -i '{
   /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
   /^[[:blank:]]*read_ssh_info(device, mount_point)/a\        read_libvirt_info(device, mount_point)
   /^[[:blank:]]*def read_ssh_info/,/^$/{
@@ -21,18 +11,17 @@ sed -i '{
   }
 }' /usr/share/YaST2/lib/installation/clients/inst_pre_install.rb
 
-sed -i '{
-  /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
-  /^[[:blank:]]*copy_ssh_files/a\\n      copy_libvirt_files\n
-  /^[[:blank:]]*def copy_ssh_files/,/^$/{
-    /^$/{
-      a\    def copy_libvirt_files
-      a\      log.info "Copying libvirt files"
-      a\      ::Installation::LibvirtImporter.instance.write_cfgfiles(installation_destination)
-      a\    end
-    }
-  }
-}' /usr/share/YaST2/lib/installation/clients/copy_files_finish.rb
+# Disabled for now because we don't implement Autoyast support to automate our module
+#sed -i '{
+#  /[[:blank:]]*_("Import SSH keys\/settings")/a\        _("Import libvirt configuration files"),
+#  /[[:blank:]]*_("Importing SSH keys\/settings")/a\        _("Importing libvirt configuration files),
+#  /if Profile.current\["ssh_import"\]/,/^$/{
+#    /^$/{
+#      a\      Progress.NextStage\n
+#                                   <-- this is where we'd call something like "libvirt_import_auto.rb"
+#    }
+#  }
+#}' /usr/share/YaST2/clients/inst_autosetup.rb
 
 in_proposal_module=0
 found_ssh_import=0
@@ -54,3 +43,16 @@ while read line ; do
     echo "$line"
 done < /control.xml >/control.xml2
 mv /control.xml2 /control.xml
+
+sed -i '{
+  /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
+  /^[[:blank:]]*copy_ssh_files/a\\n      copy_libvirt_files\n
+  /^[[:blank:]]*def copy_ssh_files/,/^$/{
+    /^$/{
+      a\    def copy_libvirt_files
+      a\      log.info "Copying libvirt files"
+      a\      ::Installation::LibvirtImporter.instance.write_cfgfiles(installation_destination)
+      a\    end
+    }
+  }
+}' /usr/share/YaST2/lib/installation/clients/copy_files_finish.rb
