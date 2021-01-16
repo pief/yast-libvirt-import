@@ -1,4 +1,4 @@
-sed -i '{
+sed '{
   /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
   /^[[:blank:]]*read_ssh_info(device, mount_point)/a\        read_libvirt_info(device, mount_point)
   /^[[:blank:]]*def read_ssh_info/,/^$/{
@@ -9,7 +9,7 @@ sed -i '{
      a\    end\n
     }
   }
-}' /usr/share/YaST2/lib/installation/clients/inst_pre_install.rb
+}' /usr/share/YaST2/lib/installation/clients/inst_pre_install.rb >update/y2update/lib/installation/clients/inst_pre_install.rb
 
 # Disabled for now because we don't implement Autoyast support to automate our module
 #sed -i '{
@@ -21,7 +21,7 @@ sed -i '{
 #                                   <-- this is where we'd call something like "libvirt_import_auto.rb"
 #    }
 #  }
-#}' /usr/share/YaST2/clients/inst_autosetup.rb
+#}' /usr/share/YaST2/clients/inst_autosetup.rb >update/y2update/clients/inst_autosetup.rb
 
 in_proposal_module=0
 found_ssh_import=0
@@ -44,7 +44,7 @@ while read line ; do
 done < /control.xml >/control.xml2
 mv /control.xml2 /control.xml
 
-sed -i '{
+sed '{
   /^require "installation\/ssh_importer"/a\require "installation/libvirt_importer"
   /^[[:blank:]]*copy_ssh_files/a\\n      copy_libvirt_files\n
   /^[[:blank:]]*def copy_ssh_files/,/^$/{
@@ -55,4 +55,4 @@ sed -i '{
       a\    end
     }
   }
-}' /usr/share/YaST2/lib/installation/clients/copy_files_finish.rb
+}' /usr/share/YaST2/lib/installation/clients/copy_files_finish.rb >update/y2update/lib/installation/clients/copy_files_finish.rb
