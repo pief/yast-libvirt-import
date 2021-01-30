@@ -47,7 +47,7 @@ module Installation
             "permissions" => File.stat(file).mode,
             "from_device" => device,
             "from_os"     => os_name,
-            "import"      => true,
+            "import"      => type == "Storage pool" ? false: true,
             "autostart"   => File.symlink?(autostart_link(file))
           }
 
