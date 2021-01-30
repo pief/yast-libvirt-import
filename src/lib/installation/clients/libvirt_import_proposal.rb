@@ -33,8 +33,8 @@ module Yast
       }
     end
 
-    def count_enabled_for(list, device)
-        list.select { |cfgfile| cfgfile["import"] && cfgfile["from_device"] == device }.count
+    def count_enabled_for(list, device, type)
+        list.select { |cfgfile| cfgfile["import"] && cfgfile["from_device"] == device && cfgfile["type"] == type }.count
     end
 
     def preformatted_proposal
@@ -43,11 +43,23 @@ module Yast
       else
         lines = []
         importer.cfgfiles.map { |cfgfile| [cfgfile["from_device"], cfgfile["from_os"]] }.uniq.each do |device, os|
-          num_cfgfiles = count_enabled_for(importer.cfgfiles, device)
-          lines << _(
-            "Import #{num_cfgfiles} configuration file#{num_cfgfiles == 1 ? '' : 's'} " \
-            "from installation on #{device} (#{os}) "
-          )
+          num_storage_pools = count_enabled_for(importer.cfgfiles, device, "Storage pool")
+          storage_pools_str = num_storage_pools > 0 ? "#{num_storage_pools} storage pool#{num_storage_pools == 1 ? '' : 's'}, " : ""
+          num_virtual_networks = count_enabled_for(importer.cfgfiles, device, "Virtual network")
+          virtual_networks_str = num_virtual_networks > 0 ? "#{num_virtual_networks} virtual network#{num_virtual_networks == 1 ? '' : 's'}, " : ""
+          num_virtual_machines = count_enabled_for(importer.cfgfiles, device, "Virtual machine")
+          virtual_machines_str = num_virtual_machines > 0 ? "#{num_virtual_machines} virtual machine#{num_virtual_machines == 1 ? '' : 's'}" : ""
+
+          if num_storage_pools || num_virtual_networks || num_virtual_machines
+            lines << _(
+              "Import #{storage_pools_str}#{virtual_networks_str}#{virtual_machines_str} " \
+              "from installation on #{device} (#{os}) "
+            )
+          else
+            lines << _(
+              "Nothing to import from installation on #{device} (#{os}) "
+            )
+          end
         end
         HTML.List(lines)
       end
