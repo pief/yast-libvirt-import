@@ -1,4 +1,5 @@
 require "fileutils"
+require "nokogiri"
 
 module Installation
   class LibvirtImporter
@@ -10,7 +11,6 @@ module Installation
 
     def initialize
       textdomain "installation"
-      Yast.import "XML"
       @cfgfiles = []
     end
 
@@ -24,7 +24,7 @@ module Installation
       begin
         os_name = Hash[*File.read(os_release).split(/[=\n]+/)]["PRETTY_NAME"].delete!('"')
       rescue IOError, SystemCallError, RuntimeError => error
-        log.error("Reading /etc/os-release on #{device} failed with exception: #{error.inspect}")
+        log.error "Reading /etc/os-release on #{device} failed with exception: #{error.inspect}"
         os_name = "Linux"
       end
 
@@ -69,16 +69,12 @@ module Installation
   protected
 
     def name_from_xml(content)
-      xml = Yast::XML.XMLToYCPString(content)
-      if xml.nil?
-        log.error "Could not parse XML in #{file}!"
-        nil
-      elsif !xml.key?("name")
-        log.error "No <name> element found in #{file}!"
-        nil
-      else
-        xml["name"]
-      end  
+      xml = Nokogiri::XML(content)
+      xml.at_xpath("//name").inner_text
+    rescue NoMethodError, Nokogiri::XML::SyntaxError => e
+      log.error "Error parsing:"
+      log.error "#{content}"
+      nil
     end
 
     def autostart_link(filename)
